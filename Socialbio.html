@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Social Bio Link Builder</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #000000;
+      --card: #f2f2f2;
+      --btn: #007bff;
+    }
+
+    body.dark {
+      --bg: #121212;
+      --text: #ffffff;
+      --card: #1e1e1e;
+      --btn: #0d6efd;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: var(--card);
+      padding: 20px;
+      border-radius: 8px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+    }
+
+    button {
+      background: var(--btn);
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .error {
+      color: red;
+      font-size: 14px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      background: var(--bg);
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 6px;
+    }
+
+    li a {
+      display: block;
+      margin: 5px 0;
+      color: var(--btn);
+    }
+
+    .actions button {
+      width: auto;
+      margin-right: 5px;
+      padding: 5px 10px;
+    }
+
+    .toggle {
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Social Bio Links</h1>
+
+    <button class="toggle" onclick="toggleTheme()">🌗 Toggle Light / Dark</button>
+
+    <input type="text" id="platform" placeholder="Platform Name (e.g. GitHub)">
+    <input type="text" id="url" placeholder="Profile URL">
+    <p class="error" id="error"></p>
+    <button onclick="addOrUpdateLink()">Save Link</button>
+
+    <ul id="linkList"></ul>
+  </div>
+
+  <script>
+    let links = JSON.parse(localStorage.getItem("links")) || [];
+    let editId = null;
+
+    const platformInput = document.getElementById("platform");
+    const urlInput = document.getElementById("url");
+    const error = document.getElementById("error");
+    const linkList = document.getElementById("linkList");
+
+    function saveLinks() {
+      localStorage.setItem("links", JSON.stringify(links));
+    }
+
+    function isValidURL(url) {
+      try {
+        new URL(url);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    function addOrUpdateLink() {
+      const name = platformInput.value.trim();
+      const url = urlInput.value.trim();
+
+      if (!name || !url) {
+        error.textContent = "All fields are required";
+        return;
+      }
+
+      if (!isValidURL(url)) {
+        error.textContent = "Please enter a valid URL";
+        return;
+      }
+
+      error.textContent = "";
+
+      if (editId) {
+        links = links.map(link =>
+          link.id === editId ? { ...link, name, url } : link
+        );
+        editId = null;
+      } else {
+        links.push({ id: Date.now(), name, url });
+      }
+
+      platformInput.value = "";
+      urlInput.value = "";
+
+      saveLinks();
+      renderLinks();
+    }
+
+    function editLink(id) {
+      const link = links.find(l => l.id === id);
+      platformInput.value = link.name;
+      urlInput.value = link.url;
+      editId = id;
+    }
+
+    function deleteLink(id) {
+      links = links.filter(link => link.id !== id);
+      saveLinks();
+      renderLinks();
+    }
+
+    function renderLinks() {
+      linkList.innerHTML = "";
+
+      links.forEach(link => {
+        const li = document.createElement("li");
+
+        li.innerHTML = `
+          <strong>${link.name}</strong>
+          <a href="${link.url}" target="_blank">${link.url}</a>
+          <div class="actions">
+            <button onclick="editLink(${link.id})">Edit</button>
+            <button onclick="deleteLink(${link.id})">Delete</button>
+          </div>
+        `;
+
+        linkList.appendChild(li);
+      });
+    }
+
+
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+      localStorage.setItem(
+        "theme",
+        document.body.classList.contains("dark") ? "dark" : "light"
+      );
+    }
+
+    function loadTheme() {
+      if (localStorage.getItem("theme") === "dark") {
+        document.body.classList.add("dark");
+      }
+    }
+
+
+    loadTheme();
+    renderLinks();
+  </script>
+
+</body>
+</html>
