@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mini CRUD App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    form {
+      margin-bottom: 20px;
+    }
+
+    input, button {
+      padding: 8px;
+      margin: 5px 0;
+      width: 100%;
+    }
+
+    .item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      padding: 8px;
+      background: #f4f4f4;
+    }
+
+    button.small {
+      width: auto;
+      margin-left: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Student List</h2>
+
+
+  <form id="studentForm">
+    <input type="text" id="nameInput" placeholder="Enter name" required />
+    <button type="submit">Add Student</button>
+  </form>
+
+  <div id="list"></div>
+
+  <script>
+  
+
+    let students = JSON.parse(localStorage.getItem("students")) || [];
+
+    const form = document.getElementById("studentForm");
+    const nameInput = document.getElementById("nameInput");
+    const list = document.getElementById("list");
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const student = {
+        id: Date.now(),
+        name: nameInput.value
+      };
+
+      students.push(student);
+      saveAndRender();
+
+      nameInput.value = "";
+    });
+
+    function saveAndRender() {
+      localStorage.setItem("students", JSON.stringify(students));
+      renderList();
+    }
+
+    function renderList() {
+      list.innerHTML = "";
+
+      students.forEach(student => {
+        const div = document.createElement("div");
+        div.className = "item";
+
+        div.innerHTML = `
+          <span>${student.name}</span>
+          <div>
+            <button class="small" onclick="editStudent(${student.id})">Edit</button>
+            <button class="small" onclick="deleteStudent(${student.id})">Delete</button>
+          </div>
+        `;
+
+        list.appendChild(div);
+      });
+    }
+
+    function editStudent(id) {
+      const newName = prompt("Enter new name");
+      students = students.map(s =>
+        s.id === id ? { ...s, name: newName } : s
+      );
+      saveAndRender();
+    }
+
+        function deleteStudent(id) {
+      students = students.filter(s => s.id !== id);
+      saveAndRender();
+    }
+    renderList();
+  </script>
+
+</body>
+</html>
